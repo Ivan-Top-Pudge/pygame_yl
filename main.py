@@ -4,6 +4,9 @@ import pygame
 import pytmx
 
 
+# TODO: 1.сделать столкновение со стенами; 2.Сделать выстрел; 3.Добавить врагов
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('src', name)
     if not os.path.isfile(fullname):
@@ -32,6 +35,12 @@ class Map:
             for x in range(self.width):
                 image = self.map.get_tile_image(x, y, 0)
                 screen.blit(image, (x * self.tile_size, y * self.tile_size))
+
+    def generate_groups(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                image = self.map.get_tile_image(x, y, 0)
+                Tile(image, x, y)
 
     def get_tile_id(self, position):
         return self.map.tiledgidmap[self.map.get_tile_gid(*position, 0)]
@@ -77,6 +86,14 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(walls_group, all_sprites)
+        self.image = image
+        self.rect = self.image.get_rect().move(
+            32 * pos_x, 32 * pos_y)
+
+
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption("Ануфриев copyright all rights reserved")
@@ -87,20 +104,25 @@ if __name__ == '__main__':
     karta = Map()
     all_sprites = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
+    walls_group = pygame.sprite.Group()
     player_image = load_image('sprites/tank_test.png', -1)
     player = Player(1, 1)
     camera = Camera()
+    karta.generate_groups()
     while running:
         screen.fill('black')
-        screen.fill('black')
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 player.move(event)
-        karta.render(screen)
-        all_sprites.draw(screen)
+        walls_group.draw(screen)
+        player_group.draw(screen)
         all_sprites.update()
         pygame.display.flip()
         clock.tick(60)
+        pygame.event.pump()
     pygame.quit()
