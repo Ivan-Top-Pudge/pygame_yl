@@ -3,6 +3,8 @@ import sys
 import pygame
 import pytmx
 
+# todo: 1.Сделать движение через update и столкновения; 2.Сделать столкновения
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('src', name)
@@ -26,12 +28,6 @@ class Map:
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = self.map.tilewidth
-
-    def render(self, screen):
-        for y in range(self.height):
-            for x in range(self.width):
-                image = self.map.get_tile_image(x, y, 0)
-                screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tile_id(self, position):
         return self.map.tiledgidmap[self.map.get_tile_gid(*position, 0)]
@@ -124,9 +120,9 @@ if __name__ == '__main__':
     player_image = load_image('sprites/tank_test.png', -1)
     bullet_image = load_image("sprites/bullet.png", -1)
     bullet_images = (pygame.transform.rotate(bullet_image, 90),
-                       pygame.transform.rotate(bullet_image, 180),
-                       pygame.transform.rotate(bullet_image, 270),
-                       pygame.transform.rotate(bullet_image, 360))
+                     pygame.transform.rotate(bullet_image, 180),
+                     pygame.transform.rotate(bullet_image, 270),
+                     pygame.transform.rotate(bullet_image, 360))
     player = Player(20, 15)
     karta.generate_groups()
     while running:
