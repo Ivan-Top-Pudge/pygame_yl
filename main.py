@@ -36,6 +36,20 @@ class Map:
     def get_tile_id(self, position):
         return self.map.tiledgidmap[self.map.get_tile_gid(*position, 0)]
 
+    def generate_groups(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                image = self.map.get_tile_image(x, y, 0)
+                Tile(image, x, y)
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(walls, all_sprites)
+        self.image = image
+        self.rect = self.image.get_rect().move(
+            pos_x * 32, pos_y * 32)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -63,18 +77,9 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += 10
 
 
-class Camera:
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-
-    def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, direction):
+        super().__init__(bullets, all_sprites)
 
 
 if __name__ == '__main__':
@@ -87,19 +92,20 @@ if __name__ == '__main__':
     karta = Map()
     all_sprites = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
+    walls = pygame.sprite.Group()
+    bullets = pygame.sprite.Group()
     player_image = load_image('sprites/tank_test.png', -1)
     player = Player(1, 1)
-    camera = Camera()
+    karta.generate_groups()
     while running:
-        screen.fill('black')
         screen.fill('black')
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 player.move(event)
-        karta.render(screen)
-        all_sprites.draw(screen)
+        walls.draw(screen)
+        player_group.draw(screen)
         all_sprites.update()
         pygame.display.flip()
         clock.tick(60)
