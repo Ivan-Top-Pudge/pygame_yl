@@ -36,12 +36,18 @@ class Map:
         for y in range(self.height):
             for x in range(self.width):
                 image = self.map.get_tile_image(x, y, 0)
-                Tile(image, x, y)
+                if self.get_tile_id((x, y)) not in (30, 31, 38, 39, 47):
+                    Tile(image, x, y, 'wall')
+                else:
+                    Tile(image, x, y, 'def')
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, image, pos_x, pos_y):
-        super().__init__(walls, all_sprites)
+    def __init__(self, image, pos_x, pos_y, tile_type):
+        if tile_type == 'wall':
+            super().__init__(walls, all_sprites)
+        else:
+            super().__init__(others, all_sprites)
         self.image = image
         self.rect = self.image.get_rect().move(
             pos_x * 32, pos_y * 32)
@@ -56,23 +62,34 @@ class Player(pygame.sprite.Sprite):
                        pygame.transform.rotate(player_image, 360))
         self.pos = 0
         self.image = self.images[self.pos]
+        self.vx, self.vy = 0, 0
         self.rect = self.image.get_rect().move(
             32 * pos_x + 15, 32 * pos_y + 5)
 
     def move(self, act):
         if act.key == pygame.K_LEFT:
+            self.vx = -3
             self.pos = 0
-            self.rect.x -= 10
         elif act.key == pygame.K_RIGHT:
+            self.vx = 3
             self.pos = 2
-            self.rect.x += 10
         elif act.key == pygame.K_UP:
+            self.vy = -3
             self.pos = 3
-            self.rect.y -= 10
         elif act.key == pygame.K_DOWN:
+            self.vy = 3
             self.pos = 1
-            self.rect.y += 10
         self.image = self.images[self.pos]
+
+    def stop(self):
+        self.vx, self.vy = 0, 0
+
+    def update(self):
+        self.rect.x += self.vx
+        self.rect.y += self.vy
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.x = self.rect.x + -self.vx
+            self.rect.y += -self.vy
 
     def shoot(self):
         Bullet(self.rect.x, self.rect.y, self.pos)
@@ -103,6 +120,8 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y += self.speedy
         if self.rect.x < 0 or self.rect.x > 40 * 32 or self.rect.y < 0 or self.rect.y > 35 * 32:
             self.kill()
+        if pygame.sprite.spritecollideany(self, walls):
+            self.kill()
 
 
 if __name__ == '__main__':
@@ -116,6 +135,7 @@ if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
     walls = pygame.sprite.Group()
+    others = pygame.sprite.Group()
     bullets = pygame.sprite.Group()
     player_image = load_image('sprites/tank_test.png', -1)
     bullet_image = load_image("sprites/bullet.png", -1)
@@ -123,7 +143,7 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    player = Player(20, 15)
+    player = Player(5, 10)
     karta.generate_groups()
     while running:
         screen.fill('black')
@@ -134,7 +154,9 @@ if __name__ == '__main__':
                 player.shoot()
             elif event.type == pygame.KEYDOWN:
                 player.move(event)
-        walls.draw(screen)
+            elif event.type == pygame.KEYUP:
+                player.stop()
+        all_sprites.draw(screen)
         player_group.draw(screen)
         bullets.draw(screen)
         all_sprites.update()
