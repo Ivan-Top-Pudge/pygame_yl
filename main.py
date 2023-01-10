@@ -3,7 +3,7 @@ import sys
 import pygame
 import pytmx
 
-# todo: 1.Сделать движение через update и столкновения; 2.Сделать столкновения
+# todo: 2.Сделать взрывы снарядов
 
 
 def load_image(name, colorkey=None):
@@ -122,6 +122,16 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
         if pygame.sprite.spritecollideany(self, walls):
             self.kill()
+        if pygame.sprite.spritecollide(self, artillery, True):
+            self.kill()
+
+
+class Arta(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(artillery, all_sprites)
+        self.image = pygame.transform.rotate(art_image, 90)
+        self.rect = self.image.get_rect().move(
+            32 * pos_x + 15, 32 * pos_y + 5)
 
 
 if __name__ == '__main__':
@@ -137,13 +147,16 @@ if __name__ == '__main__':
     walls = pygame.sprite.Group()
     others = pygame.sprite.Group()
     bullets = pygame.sprite.Group()
+    artillery = pygame.sprite.Group()
     player_image = load_image('sprites/tank_test.png', -1)
     bullet_image = load_image("sprites/bullet.png", -1)
+    art_image = load_image("sprites/arta.png", -1)
     bullet_images = (pygame.transform.rotate(bullet_image, 90),
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
     player = Player(5, 10)
+    Arta(30, 1)
     karta.generate_groups()
     while running:
         screen.fill('black')
@@ -157,8 +170,9 @@ if __name__ == '__main__':
             elif event.type == pygame.KEYUP:
                 player.stop()
         all_sprites.draw(screen)
+        artillery.draw(screen)
         player_group.draw(screen)
-        bullets.draw(screen)
+        artillery.update()
         all_sprites.update()
         pygame.display.flip()
         clock.tick(60)
