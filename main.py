@@ -3,8 +3,6 @@ import sys
 import pygame
 import pytmx
 
-# todo: 2.Сделать взрывы снарядов
-
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('src', name)
@@ -20,6 +18,43 @@ def load_image(name, colorkey=None):
     else:
         image = image.convert_alpha()
     return image
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Правила игры",
+                  "Вы играете за экипаж лт,",
+                  "Вы пробрались в тыл врага",
+                  "Ваша цель: уничтожить артилерию врага"]
+
+    clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(60)
 
 
 class Map:
@@ -169,6 +204,7 @@ if __name__ == '__main__':
     pygame.display.set_caption("Ануфриев copyright all rights reserved")
     size = width, height = 40 * 32, 35 * 32
     screen = pygame.display.set_mode(size)
+    start_screen()
     running = True
     clock = pygame.time.Clock()
     karta = Map()
