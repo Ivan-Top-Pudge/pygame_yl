@@ -52,7 +52,7 @@ def start_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+                return
         pygame.display.flip()
         clock.tick(60)
 
@@ -84,7 +84,7 @@ def end_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+                return
         pygame.display.flip()
         clock.tick(60)
 
@@ -94,7 +94,7 @@ def final_screen():
                   "Поздравляем!",
                   "Игра пройдена!",
                   "Надеюсь она вам понравилась",
-                  "(Нажмите любую клавишу чтобы вернуться в меню)"]
+                  "(Нажмите любую клавишу чтобы выйти)"]
 
     clock = pygame.time.Clock()
     fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
@@ -116,9 +116,42 @@ def final_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+                return
         pygame.display.flip()
         clock.tick(60)
+
+
+def game_over_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Поражение!",
+                  "Вы были уничтожены!",
+                  "",
+                  "(Нажмите любую клавишу чтобы выйти)",
+                  "(Перезапустите игру, чтобы начать сначала)"]
+
+    _clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for _event in pygame.event.get():
+            if _event.type == pygame.QUIT:
+                terminate()
+            elif _event.type == pygame.KEYDOWN or \
+                    _event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        _clock.tick(60)
 
 
 class Map:
@@ -233,6 +266,31 @@ class Arta(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(art_image, 90)
         self.rect = self.image.get_rect().move(
             32 * pos_x + 15, 32 * pos_y + 5)
+        self.aim = 50
+
+    def update(self):
+        self.aim -= 1
+        if self.aim == 0 and player_group:
+            Bomb(player.rect.x, player.rect.y)
+            self.aim = 50
+
+
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self, pos_x, target_y):
+        super().__init__(all_sprites, bombs)
+        self.image = bomb_image
+        self.target_y = target_y
+        self.rect = self.image.get_rect().move(
+            pos_x, -50)
+
+    def update(self):
+        if self.target_y - 20 < self.rect.y < self.target_y + 20:
+            self.kill()
+            Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
+        self.rect.y += 10
+        if pygame.sprite.spritecollide(self, player_group, True):
+            Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
+            self.kill()
 
 
 class Boom(pygame.sprite.Sprite):
@@ -273,6 +331,7 @@ def generate_level(map_obj: Map, arta_cords: list):
 
 
 if __name__ == '__main__':
+    name = 'admin'
     pygame.init()
     pygame.display.set_caption("Ануфриев copyright all rights reserved")
     size = width, height = 40 * 32, 35 * 32
@@ -287,19 +346,22 @@ if __name__ == '__main__':
     walls = pygame.sprite.Group()
     others = pygame.sprite.Group()
     bullets = pygame.sprite.Group()
+    bombs = pygame.sprite.Group()
     artillery = pygame.sprite.Group()
     player_image = load_image('sprites/tank_test.png', -1)
     bullet_image = load_image("sprites/bullet.png", -1)
     art_image = load_image("sprites/arta.png", -1)
+    bomb_image = load_image('sprites/bomb.png', -1)
     bullet_images = (pygame.transform.rotate(bullet_image, 90),
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    levels = ((Map("map2.tmx"), [[30, 15]]), (Map("map3.tmx"), [[30, 15], [30, 25]]))
+    levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]))
     points = (50, 500)
     cur_level = 0
     player = generate_level(*levels[cur_level])
     score = 0
+    time = 0
     while running:
         screen.fill('black')
         if not artillery:
@@ -316,6 +378,9 @@ if __name__ == '__main__':
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 player.shoot()
             elif event.type == pygame.KEYDOWN:
+                if not player_group:
+                    game_over_screen()
+                    break
                 player.move(event)
             elif event.type == pygame.KEYUP:
                 player.stop()
@@ -326,3 +391,8 @@ if __name__ == '__main__':
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
+    with open('results.txt', 'r', encoding='utf-8') as file:
+        data = file.read()
+    with open('results.txt', 'w', encoding='utf-8') as file:
+        file.write(data)
+        file.write(f"\n{name} прошёл игру")

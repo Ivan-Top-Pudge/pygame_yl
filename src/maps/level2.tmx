@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="40" height="35" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
- <tileset firstgid="1" source="tmw_desert_spacing.tsx"/>
+ <tileset firstgid="1" source="../../tmw_desert_spacing.tsx"/>
  <layer id="1" name="Слой тайлов 1" width="40" height="35">
   <data encoding="csv">
 20,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,21,
