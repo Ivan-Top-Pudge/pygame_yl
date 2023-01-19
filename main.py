@@ -4,8 +4,8 @@ import pygame
 import pytmx
 
 
-def load_image(name, colorkey=None):
-    fullname = os.path.join('src', name)
+def load_image(file_name, colorkey=None):
+    fullname = os.path.join('src', file_name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -239,15 +239,15 @@ class Map:
 
 
 def info_dead():
-    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+    intro_text = ["",
                   "Вас уничтожили",
                   "",
                   "",
                   "(Нажмите любую клавишу)"]
-    font = pygame.font.Font(None, 50)
-    text_coord = 50
+    font = pygame.font.Font(None, 70)
+    text_coord = 250
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, 1, pygame.Color('Red'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -442,7 +442,8 @@ if __name__ == '__main__':
     pygame.display.set_caption("Ануфриев copyright all rights reserved")
     size = width, height = 40 * 32, 35 * 32
     screen = pygame.display.set_mode(size)
-
+    pygame.mixer.music.load('src/music/music.mp3')
+    pygame.mixer.music.play()
     start_screen()
 
     running = True
@@ -462,25 +463,26 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]))
-    points = (50, 500)
+    levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]),
+              (Map("src/maps/level3.tmx"), [[28, 7], [28, 25]]))
+    points = (50, 500, 1000)
     cur_level = 0
     player = generate_level(*levels[cur_level])
     score = 0
-    time = 0
     succes = False
+
     while running:
         screen.fill('black')
         if not artillery:
             score += points[cur_level]
             cur_level += 1
-            if cur_level == 2:
+            if cur_level == 3:
                 succes = True
                 final_screen()
                 break
             if cur_level == 1:
                 level1_screen()
-            else:
+            elif cur_level == 2:
                 level2_screen()
             player = generate_level(*levels[cur_level])
         for event in pygame.event.get():
@@ -500,6 +502,11 @@ if __name__ == '__main__':
         artillery.draw(screen)
         player_group.draw(screen)
         all_sprites.update()
+        if not player_group:
+            pygame.mixer.stop()
+            pygame.mixer.music.load('src/music/gameover.mp3')
+            pygame.mixer.music.play()
+            info_dead()
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
@@ -508,10 +515,10 @@ if __name__ == '__main__':
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} прошёл игру")
+            file.write(f"\n{name} прошёл игру. Счёт: {score}")
     else:
         with open('results.txt', 'r', encoding='utf-8') as file:
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} не прошёл игру, погиб на {cur_level + 1} уровне")
+            file.write(f"\n{name} погиб на {cur_level + 1} уровне. Счёт: {score}")

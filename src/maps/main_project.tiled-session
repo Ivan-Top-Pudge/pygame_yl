@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "level1.tmx",
+    "activeFile": "level3.tmx",
     "expandedProjectPaths": [
         "levels",
         "."
@@ -40,8 +40,16 @@
             "scale": 1.072142857142857,
             "selectedLayer": 0,
             "viewCenter": {
+                "x": 639.840106595603,
+                "y": 559.1605596269155
+            }
+        },
+        "level3.tmx": {
+            "scale": 1.072142857142857,
+            "selectedLayer": 0,
+            "viewCenter": {
                 "x": 640.3064623584278,
-                "y": 558.6942038640907
+                "y": 560.5596269153898
             }
         },
         "tmw_desert_spacing.tsx": {
@@ -55,13 +63,15 @@
     "openFiles": [
         "level1.tmx",
         "level2.tmx",
-        "tmw_desert_spacing.tsx"
+        "tmw_desert_spacing.tsx",
+        "level3.tmx"
     ],
     "project": "main_project.tiled-project",
     "recentFiles": [
-        "tmw_desert_spacing.tsx",
-        "level2.tmx",
         "level1.tmx",
+        "level2.tmx",
+        "tmw_desert_spacing.tsx",
+        "level3.tmx",
         "C:/pythonProject/pygame_yl/map2.tmx",
         "C:/pythonProject/pygame_yl/map3.tmx"
     ],
