@@ -57,9 +57,73 @@ def start_screen():
         clock.tick(60)
 
 
+def end_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Поздравляем!",
+                  "Уровень пройден",
+                  "",
+                  "(Нажмите любую клавишу чтобы вернуться в меню)"]
+
+    clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(60)
+
+
+def final_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Поздравляем!",
+                  "Игра пройдена!",
+                  "Надеюсь она вам понравилась",
+                  "(Нажмите любую клавишу чтобы вернуться в меню)"]
+
+    clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(60)
+
+
 class Map:
-    def __init__(self):
-        self.map = pytmx.load_pygame("map2.tmx")
+    def __init__(self, map_name):
+        self.map = pytmx.load_pygame(map_name)
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = self.map.tilewidth
@@ -71,7 +135,7 @@ class Map:
         for y in range(self.height):
             for x in range(self.width):
                 image = self.map.get_tile_image(x, y, 0)
-                if self.get_tile_id((x, y)) not in (30, 31, 38, 39, 47):
+                if self.get_tile_id((x, y)) not in (30, 31, 32, 38, 39, 47):
                     Tile(image, x, y, 'wall')
                 else:
                     Tile(image, x, y, 'def')
@@ -199,15 +263,25 @@ class Boom(pygame.sprite.Sprite):
             self.kill()
 
 
+def generate_level(map_obj: Map, arta_cords: list):
+    for sprite in all_sprites:
+        sprite.kill()
+    for cords in arta_cords:
+        Arta(cords[0], cords[1])
+    map_obj.generate_groups()
+    return Player(5, 15)
+
+
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption("Ануфриев copyright all rights reserved")
     size = width, height = 40 * 32, 35 * 32
     screen = pygame.display.set_mode(size)
+
     start_screen()
+
     running = True
     clock = pygame.time.Clock()
-    karta = Map()
     all_sprites = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
     walls = pygame.sprite.Group()
@@ -221,11 +295,21 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    player = Player(5, 10)
-    Arta(30, 1)
-    karta.generate_groups()
+    levels = ((Map("map2.tmx"), [[30, 15]]), (Map("map3.tmx"), [[30, 15], [30, 25]]))
+    points = (50, 500)
+    cur_level = 0
+    player = generate_level(*levels[cur_level])
+    score = 0
     while running:
         screen.fill('black')
+        if not artillery:
+            score += points[cur_level]
+            cur_level += 1
+            if cur_level == 2:
+                final_screen()
+                break
+            end_screen()
+            player = generate_level(*levels[cur_level])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
