@@ -174,6 +174,24 @@ class Map:
                     Tile(image, x, y, 'def')
 
 
+def info_dead():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Вас уничтожили",
+                  "",
+                  "",
+                  "(Нажмите любую клавишу)"]
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, image, pos_x, pos_y, tile_type):
         if tile_type == 'wall':
@@ -246,6 +264,7 @@ class Bullet(pygame.sprite.Sprite):
             x, y = pos_x + 33, pos_y - 30
             self.speedy -= 10
         self.rect = self.image.get_rect().move(x, y)
+        ShootBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y - 30)
 
     def update(self):
         self.rect.x += self.speedx
@@ -253,10 +272,13 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.x < 0 or self.rect.x > 40 * 32 or self.rect.y < 0 or self.rect.y > 35 * 32:
             self.kill()
         if pygame.sprite.spritecollideany(self, walls):
-            Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
+            LittleBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
             self.kill()
         if pygame.sprite.spritecollide(self, artillery, True):
             Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
+            self.kill()
+        if pygame.sprite.spritecollide(self, bombs, True):
+            Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x - 30, self.rect.y)
             self.kill()
 
 
@@ -272,7 +294,7 @@ class Arta(pygame.sprite.Sprite):
         self.aim -= 1
         if self.aim == 0 and player_group:
             Bomb(player.rect.x, player.rect.y)
-            self.aim = 50
+            self.aim = 80
 
 
 class Bomb(pygame.sprite.Sprite):
@@ -321,6 +343,26 @@ class Boom(pygame.sprite.Sprite):
             self.kill()
 
 
+class LittleBoom(Boom):
+    def update(self):
+        self.frame += 1
+        if not self.frame % 3:
+            self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+            self.image = self.frames[self.cur_frame]
+        if self.frame == 6:
+            self.kill()
+
+
+class ShootBoom(Boom):
+    def update(self):
+        self.frame += 1
+        if not self.frame % 2:
+            self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+            self.image = self.frames[self.cur_frame]
+        if self.frame == 4:
+            self.kill()
+
+
 def generate_level(map_obj: Map, arta_cords: list):
     for sprite in all_sprites:
         sprite.kill()
@@ -362,12 +404,14 @@ if __name__ == '__main__':
     player = generate_level(*levels[cur_level])
     score = 0
     time = 0
+    succes = False
     while running:
         screen.fill('black')
         if not artillery:
             score += points[cur_level]
             cur_level += 1
             if cur_level == 2:
+                succes = True
                 final_screen()
                 break
             end_screen()
@@ -376,11 +420,12 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                player.shoot()
+                if player_group:
+                    player.shoot()
             elif event.type == pygame.KEYDOWN:
                 if not player_group:
                     game_over_screen()
-                    break
+                    running = False
                 player.move(event)
             elif event.type == pygame.KEYUP:
                 player.stop()
@@ -391,8 +436,15 @@ if __name__ == '__main__':
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
-    with open('results.txt', 'r', encoding='utf-8') as file:
-        data = file.read()
-    with open('results.txt', 'w', encoding='utf-8') as file:
-        file.write(data)
-        file.write(f"\n{name} прошёл игру")
+    if succes:
+        with open('results.txt', 'r', encoding='utf-8') as file:
+            data = file.read()
+        with open('results.txt', 'w', encoding='utf-8') as file:
+            file.write(data)
+            file.write(f"\n{name} прошёл игру")
+    else:
+        with open('results.txt', 'r', encoding='utf-8') as file:
+            data = file.read()
+        with open('results.txt', 'w', encoding='utf-8') as file:
+            file.write(data)
+            file.write(f"\n{name} не прошёл игру, погиб на {cur_level + 1} уровне")
