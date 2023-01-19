@@ -97,7 +97,7 @@ def final_screen():
                   "(Нажмите любую клавишу чтобы выйти)"]
 
     clock = pygame.time.Clock()
-    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    fon = pygame.transform.scale(load_image('sprites/victory.jpg'), (40 * 32, 35 * 32))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
     text_coord = 50
@@ -130,7 +130,71 @@ def game_over_screen():
                   "(Перезапустите игру, чтобы начать сначала)"]
 
     _clock = pygame.time.Clock()
-    fon = pygame.transform.scale(load_image('sprites/fon.jpg'), (40 * 32, 35 * 32))
+    fon = pygame.transform.scale(load_image('sprites/gameover.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for _event in pygame.event.get():
+            if _event.type == pygame.QUIT:
+                terminate()
+            elif _event.type == pygame.KEYDOWN or \
+                    _event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        _clock.tick(60)
+
+
+def level1_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Уровень 1!",
+                  "Переход на уровень 2!",
+                  "",
+                  "(Нажмите любую клавишу)",]
+
+    _clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon1.jpg'), (40 * 32, 35 * 32))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 100
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for _event in pygame.event.get():
+            if _event.type == pygame.QUIT:
+                terminate()
+            elif _event.type == pygame.KEYDOWN or \
+                    _event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        _clock.tick(60)
+
+
+def level2_screen():
+    intro_text = ["World Of Tanks", "(EARLY BETA 0.1)",
+                  "Уровень 2!",
+                  "Переход на уровень 2!",
+                  "",
+                  "(Нажмите любую клавишу)"]
+
+    _clock = pygame.time.Clock()
+    fon = pygame.transform.scale(load_image('sprites/fon2.jpg'), (40 * 32, 35 * 32))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
     text_coord = 50
@@ -414,7 +478,10 @@ if __name__ == '__main__':
                 succes = True
                 final_screen()
                 break
-            end_screen()
+            if cur_level == 1:
+                level1_screen()
+            else:
+                level2_screen()
             player = generate_level(*levels[cur_level])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
