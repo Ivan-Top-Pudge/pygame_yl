@@ -464,7 +464,8 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
     levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]),
-              (Map("src/maps/level3.tmx"), [[28, 7], [28, 25]]))
+              (Map("src/maps/level3.tmx"), [[28, 7], [28, 25]]),
+              (Map("src/maps/level4.tmx"), [[26, 7], [26, 25]]))
     points = (50, 500, 1000)
     cur_level = 0
     player = generate_level(*levels[cur_level])
@@ -473,10 +474,12 @@ if __name__ == '__main__':
 
     while running:
         screen.fill('black')
+        if not player_group:
+            info_dead()
         if not artillery:
             score += points[cur_level]
             cur_level += 1
-            if cur_level == 3:
+            if cur_level == 4:
                 succes = True
                 final_screen()
                 break
@@ -484,6 +487,8 @@ if __name__ == '__main__':
                 level1_screen()
             elif cur_level == 2:
                 level2_screen()
+            else:
+                end_screen()
             player = generate_level(*levels[cur_level])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -502,11 +507,7 @@ if __name__ == '__main__':
         artillery.draw(screen)
         player_group.draw(screen)
         all_sprites.update()
-        if not player_group:
-            pygame.mixer.stop()
-            pygame.mixer.music.load('src/music/gameover.mp3')
-            pygame.mixer.music.play()
-            info_dead()
+
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
