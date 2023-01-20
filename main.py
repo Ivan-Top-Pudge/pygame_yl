@@ -95,7 +95,8 @@ def final_screen():
                   "Поздравляем!",
                   "Игра пройдена!",
                   "Надеюсь она вам понравилась",
-                  "(Нажмите любую клавишу чтобы выйти)"]
+                  "(Нажмите любую клавишу чтобы выйти)",
+                  "Но сначала послушайте музыку!!!"]
 
     clock = pygame.time.Clock()
     fon = pygame.transform.scale(load_image('sprites/victory.jpg'), (40 * 32, 35 * 32))
@@ -509,6 +510,8 @@ if __name__ == '__main__':
             cur_level += 1
             if cur_level == 3:
                 succes = True
+                pygame.mixer.music.load('src/music/pobeda.mp3')
+                pygame.mixer.music.play()
                 final_screen()
                 break
             if cur_level == 1:
@@ -544,10 +547,10 @@ if __name__ == '__main__':
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} прошёл игру. Счёт: {score}")
+            file.write(f"\n Игра пройдена. Счёт: {score}")
     else:
         with open('results.txt', 'r', encoding='utf-8') as file:
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} погиб на {cur_level + 1} уровне. Счёт: {score}")
+            file.write(f"\nПоражение на {cur_level + 1} уровне. Счёт: {score}")
