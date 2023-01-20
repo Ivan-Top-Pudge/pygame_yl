@@ -2,6 +2,7 @@ import os
 import sys
 import pygame
 import pytmx
+from random import randint
 
 
 def load_image(file_name, colorkey=None):
@@ -307,6 +308,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += -self.vy
 
     def shoot(self):
+        tank_zvuk.play()
         Bullet(self.rect.x, self.rect.y, self.pos)
 
 
@@ -340,6 +342,7 @@ class Bullet(pygame.sprite.Sprite):
             LittleBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
             self.kill()
         if pygame.sprite.spritecollide(self, artillery, True):
+            boom_zvuk.play()
             Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
             self.kill()
         if pygame.sprite.spritecollide(self, bombs, True):
@@ -353,11 +356,13 @@ class Arta(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(art_image, 90)
         self.rect = self.image.get_rect().move(
             32 * pos_x + 15, 32 * pos_y + 5)
-        self.aim = 50
+        self.kd = 80
+        self.aim = randint(30, 80)
 
     def update(self):
         self.aim -= 1
         if self.aim == 0 and player_group:
+            arta_zvuk.play()
             Bomb(player.rect.x, player.rect.y)
             self.aim = 80
 
@@ -368,7 +373,7 @@ class Bomb(pygame.sprite.Sprite):
         self.image = bomb_image
         self.target_y = target_y
         self.rect = self.image.get_rect().move(
-            pos_x, -50)
+            randint(pos_x - 20, pos_x + 20), -50)
 
     def update(self):
         if self.target_y - 20 < self.rect.y < self.target_y + 20:
@@ -463,7 +468,7 @@ if __name__ == '__main__':
     size = width, height = 40 * 32, 35 * 32
     screen = pygame.display.set_mode(size)
     pygame.mixer.music.load('src/music/music.mp3')
-    # pygame.mixer.music.play()
+    pygame.mixer.music.play()
     start_screen()
 
     running = True
@@ -486,13 +491,17 @@ if __name__ == '__main__':
     sand_image = load_image('sprites/sand1.png')
     brick_image = load_image("sprites/brick1.png")
 
+    arta_zvuk = pygame.mixer.Sound('src/music/arta-shoot.mp3')
+    tank_zvuk = pygame.mixer.Sound('src/music/tank-shoot.mp3')
+    boom_zvuk = pygame.mixer.Sound('src/music/boom.mp3')
+    boom_zvuk.set_volume(0.5)
+
     levels = (load_level('maps/level1.txt'), load_level('maps/level2.txt'), load_level('maps/level3.txt'))
     points = (50, 500, 1000)
     cur_level = 0
     player = generate_level(levels[cur_level])
     score = 0
     succes = False
-
     while running:
         screen.fill('black')
         if not artillery:
@@ -509,7 +518,6 @@ if __name__ == '__main__':
             else:
                 end_screen()
             player = generate_level(levels[cur_level])
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
