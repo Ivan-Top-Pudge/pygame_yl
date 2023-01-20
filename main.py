@@ -474,8 +474,6 @@ if __name__ == '__main__':
 
     while running:
         screen.fill('black')
-        if not player_group:
-            info_dead()
         if not artillery:
             score += points[cur_level]
             cur_level += 1
@@ -490,6 +488,7 @@ if __name__ == '__main__':
             else:
                 end_screen()
             player = generate_level(*levels[cur_level])
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -497,9 +496,6 @@ if __name__ == '__main__':
                 if player_group:
                     player.shoot()
             elif event.type == pygame.KEYDOWN:
-                if not player_group:
-                    game_over_screen()
-                    running = False
                 player.move(event)
             elif event.type == pygame.KEYUP:
                 player.stop()
@@ -507,7 +503,11 @@ if __name__ == '__main__':
         artillery.draw(screen)
         player_group.draw(screen)
         all_sprites.update()
-
+        if not player_group:
+            info_dead()
+            pygame.event.wait()
+            game_over_screen()
+            running = False
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
