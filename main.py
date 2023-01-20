@@ -257,12 +257,13 @@ def info_dead():
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, image, pos_x, pos_y, tile_type):
-        if tile_type == 'wall':
+    def __init__(self, image, pos_x, pos_y):
+        if image == 'wall':
             super().__init__(walls, all_sprites)
+            self.image = brick_image
         else:
             super().__init__(others, all_sprites)
-        self.image = image
+            self.image = sand_image
         self.rect = self.image.get_rect().move(
             pos_x * 32, pos_y * 32)
 
@@ -427,13 +428,32 @@ class ShootBoom(Boom):
             self.kill()
 
 
-def generate_level(map_obj: Map, arta_cords: list):
+def load_level(filename):
+    filename = "src/" + filename
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+
+    max_width = max(map(len, level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+def generate_level(level):
     for sprite in all_sprites:
         sprite.kill()
-    for cords in arta_cords:
-        Arta(cords[0], cords[1])
-    map_obj.generate_groups()
-    return Player(5, 15)
+    new_player, x, y = (5, 15), None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '.':
+                Tile('sand', x, y)
+            elif level[y][x] == '#':
+                Tile('wall', x, y)
+            elif level[y][x] == '@':
+                Tile('sand', x, y)
+                new_player = x, y
+            elif level[y][x] == '!':
+                Tile('sand', x, y)
+                Arta(x, y)
+    return Player(*new_player)
 
 
 if __name__ == '__main__':
@@ -443,7 +463,7 @@ if __name__ == '__main__':
     size = width, height = 40 * 32, 35 * 32
     screen = pygame.display.set_mode(size)
     pygame.mixer.music.load('src/music/music.mp3')
-    pygame.mixer.music.play()
+    # pygame.mixer.music.play()
     start_screen()
 
     running = True
@@ -463,12 +483,13 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]),
-              (Map("src/maps/level3.tmx"), [[28, 7], [28, 25]]),
-              (Map("src/maps/level4.tmx"), [[26, 7], [26, 25]]))
+    sand_image = load_image('sprites/sand1.png')
+    brick_image = load_image("sprites/brick1.png")
+
+    levels = (load_level('maps/level1.txt'), load_level('maps/level2.txt'), load_level('maps/level3.txt'))
     points = (50, 500, 1000)
     cur_level = 0
-    player = generate_level(*levels[cur_level])
+    player = generate_level(levels[cur_level])
     score = 0
     succes = False
 
@@ -477,7 +498,7 @@ if __name__ == '__main__':
         if not artillery:
             score += points[cur_level]
             cur_level += 1
-            if cur_level == 4:
+            if cur_level == 3:
                 succes = True
                 final_screen()
                 break
@@ -487,7 +508,7 @@ if __name__ == '__main__':
                 level2_screen()
             else:
                 end_screen()
-            player = generate_level(*levels[cur_level])
+            player = generate_level(levels[cur_level])
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -505,7 +526,6 @@ if __name__ == '__main__':
         all_sprites.update()
         if not player_group:
             info_dead()
-            pygame.event.wait()
             game_over_screen()
             running = False
         pygame.display.flip()
