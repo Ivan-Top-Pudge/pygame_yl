@@ -1,7 +1,6 @@
 import os
 import sys
 import pygame
-import pytmx
 from random import randint
 
 
@@ -222,7 +221,7 @@ def level2_screen():
 
 class Map:
     def __init__(self, map_name):
-        self.map = pytmx.load_pygame(map_name)
+        self.map = map_name
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = self.map.tilewidth
@@ -256,6 +255,17 @@ def info_dead():
         intro_rect.x = 100
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
+
+
+def info_record():
+    font = pygame.font.Font(None, 70)
+    text_coord = 50
+    string_rendered = font.render(str(score), 1, pygame.Color('yellow'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = text_coord
+    intro_rect.x = 600
+    text_coord += intro_rect.height
+    screen.blit(string_rendered, intro_rect)
 
 
 class Tile(pygame.sprite.Sprite):
@@ -535,6 +545,7 @@ if __name__ == '__main__':
         artillery.draw(screen)
         player_group.draw(screen)
         all_sprites.update()
+        info_record()
         if not player_group:
             info_dead()
             game_over_screen()
