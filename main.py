@@ -374,6 +374,7 @@ class Arta(pygame.sprite.Sprite):
         self.aim -= 1
         if self.aim == 0 and player_group:
             arta_zvuk.play()
+            ShootBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x - 40, self.rect.y - 10)
             Bomb(player.rect.x, player.rect.y)
             self.aim = 80
 
