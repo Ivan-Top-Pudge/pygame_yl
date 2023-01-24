@@ -1,7 +1,7 @@
 import os
 import sys
 import pygame
-import pytmx
+from random import randint
 
 
 def load_image(file_name, colorkey=None):
@@ -94,7 +94,8 @@ def final_screen():
                   "Поздравляем!",
                   "Игра пройдена!",
                   "Надеюсь она вам понравилась",
-                  "(Нажмите любую клавишу чтобы выйти)"]
+                  "(Нажмите любую клавишу чтобы выйти)",
+                  "Но сначала послушайте музыку!!!"]
 
     clock = pygame.time.Clock()
     fon = pygame.transform.scale(load_image('sprites/victory.jpg'), (40 * 32, 35 * 32))
@@ -220,7 +221,7 @@ def level2_screen():
 
 class Map:
     def __init__(self, map_name):
-        self.map = pytmx.load_pygame(map_name)
+        self.map = map_name
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = self.map.tilewidth
@@ -256,13 +257,25 @@ def info_dead():
         screen.blit(string_rendered, intro_rect)
 
 
+def info_record():
+    font = pygame.font.Font(None, 70)
+    text_coord = 50
+    string_rendered = font.render(str(score), 1, pygame.Color('yellow'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = text_coord
+    intro_rect.x = 600
+    text_coord += intro_rect.height
+    screen.blit(string_rendered, intro_rect)
+
+
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, image, pos_x, pos_y, tile_type):
-        if tile_type == 'wall':
+    def __init__(self, image, pos_x, pos_y):
+        if image == 'wall':
             super().__init__(walls, all_sprites)
+            self.image = brick_image
         else:
             super().__init__(others, all_sprites)
-        self.image = image
+            self.image = sand_image
         self.rect = self.image.get_rect().move(
             pos_x * 32, pos_y * 32)
 
@@ -306,6 +319,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += -self.vy
 
     def shoot(self):
+        tank_zvuk.play()
         Bullet(self.rect.x, self.rect.y, self.pos)
 
 
@@ -339,6 +353,7 @@ class Bullet(pygame.sprite.Sprite):
             LittleBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
             self.kill()
         if pygame.sprite.spritecollide(self, artillery, True):
+            boom_zvuk.play()
             Boom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x, self.rect.y)
             self.kill()
         if pygame.sprite.spritecollide(self, bombs, True):
@@ -352,11 +367,14 @@ class Arta(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(art_image, 90)
         self.rect = self.image.get_rect().move(
             32 * pos_x + 15, 32 * pos_y + 5)
-        self.aim = 50
+        self.kd = 80
+        self.aim = randint(30, 80)
 
     def update(self):
         self.aim -= 1
         if self.aim == 0 and player_group:
+            arta_zvuk.play()
+            ShootBoom(load_image("sprites/boom.png", -1), 3, 1, self.rect.x - 40, self.rect.y - 10)
             Bomb(player.rect.x, player.rect.y)
             self.aim = 80
 
@@ -367,7 +385,7 @@ class Bomb(pygame.sprite.Sprite):
         self.image = bomb_image
         self.target_y = target_y
         self.rect = self.image.get_rect().move(
-            pos_x, -50)
+            randint(pos_x - 20, pos_x + 20), -50)
 
     def update(self):
         if self.target_y - 20 < self.rect.y < self.target_y + 20:
@@ -427,13 +445,32 @@ class ShootBoom(Boom):
             self.kill()
 
 
-def generate_level(map_obj: Map, arta_cords: list):
+def load_level(filename):
+    filename = "src/" + filename
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+
+    max_width = max(map(len, level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+def generate_level(level):
     for sprite in all_sprites:
         sprite.kill()
-    for cords in arta_cords:
-        Arta(cords[0], cords[1])
-    map_obj.generate_groups()
-    return Player(5, 15)
+    new_player, x, y = (5, 15), None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '.':
+                Tile('sand', x, y)
+            elif level[y][x] == '#':
+                Tile('wall', x, y)
+            elif level[y][x] == '@':
+                Tile('sand', x, y)
+                new_player = x, y
+            elif level[y][x] == '!':
+                Tile('sand', x, y)
+                Arta(x, y)
+    return Player(*new_player)
 
 
 if __name__ == '__main__':
@@ -463,22 +500,29 @@ if __name__ == '__main__':
                      pygame.transform.rotate(bullet_image, 180),
                      pygame.transform.rotate(bullet_image, 270),
                      pygame.transform.rotate(bullet_image, 360))
-    levels = ((Map("src/maps/level1.tmx"), [[30, 15]]), (Map("src/maps/level2.tmx"), [[30, 15], [30, 25]]),
-              (Map("src/maps/level3.tmx"), [[28, 7], [28, 25]]),
-              (Map("src/maps/level4.tmx"), [[26, 7], [26, 25]]))
+    sand_image = load_image('sprites/sand1.png')
+    brick_image = load_image("sprites/brick1.png")
+
+    arta_zvuk = pygame.mixer.Sound('src/music/arta-shoot.mp3')
+    tank_zvuk = pygame.mixer.Sound('src/music/tank-shoot.mp3')
+    boom_zvuk = pygame.mixer.Sound('src/music/boom.mp3')
+    boom_zvuk.set_volume(0.5)
+
+    levels = (load_level('maps/level1.txt'), load_level('maps/level2.txt'), load_level('maps/level3.txt'))
     points = (50, 500, 1000)
     cur_level = 0
-    player = generate_level(*levels[cur_level])
+    player = generate_level(levels[cur_level])
     score = 0
     succes = False
-
     while running:
         screen.fill('black')
         if not artillery:
             score += points[cur_level]
             cur_level += 1
-            if cur_level == 4:
+            if cur_level == 3:
                 succes = True
+                pygame.mixer.music.load('src/music/pobeda.mp3')
+                pygame.mixer.music.play()
                 final_screen()
                 break
             if cur_level == 1:
@@ -487,8 +531,7 @@ if __name__ == '__main__':
                 level2_screen()
             else:
                 end_screen()
-            player = generate_level(*levels[cur_level])
-
+            player = generate_level(levels[cur_level])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -503,9 +546,9 @@ if __name__ == '__main__':
         artillery.draw(screen)
         player_group.draw(screen)
         all_sprites.update()
+        info_record()
         if not player_group:
             info_dead()
-            pygame.event.wait()
             game_over_screen()
             running = False
         pygame.display.flip()
@@ -516,10 +559,10 @@ if __name__ == '__main__':
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} прошёл игру. Счёт: {score}")
+            file.write(f"\n Игра пройдена. Счёт: {score}")
     else:
         with open('results.txt', 'r', encoding='utf-8') as file:
             data = file.read()
         with open('results.txt', 'w', encoding='utf-8') as file:
             file.write(data)
-            file.write(f"\n{name} погиб на {cur_level + 1} уровне. Счёт: {score}")
+            file.write(f"\nПоражение на {cur_level + 1} уровне. Счёт: {score}")
